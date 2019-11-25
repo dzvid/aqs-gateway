@@ -103,6 +103,7 @@ You can read more about venv in the [venv docs](https://docs.python.org/3/librar
 ## Links: 
 - [Setting up a Python development environment](https://cloud.google.com/python/setup?hl=en-us#installing_and_using_virtualenv)
 - [Guia definitivo para organizar meu ambiente Python](https://medium.com/welcome-to-the-django/guia-definitivo-para-organizar-meu-ambiente-python-a16e2479b753)
+- [PYTHON E VIRTUALENV: COMO PROGRAMAR EM AMBIENTES VIRTUAIS](https://pythonacademy.com.br/blog/python-e-virtualenv-como-programar-em-ambientes-virtuais)
 - [Ambientes Virtuais no Python >= 3.6 (venv)
 ](https://medium.com/capivarapython/ambientes-virtuais-no-python-3-6-venv-791b44e0fb0b)
 
