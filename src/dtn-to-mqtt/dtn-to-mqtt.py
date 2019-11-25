@@ -4,7 +4,6 @@ import base64
 import threading
 import json
 import queue as Queue
-import six
 
 from environs import Env
 from math import ceil
