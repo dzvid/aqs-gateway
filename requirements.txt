@@ -1,8 +1,8 @@
-autopep8==1.4.4
-environs==6.1.0
-marshmallow==3.2.2
-paho-mqtt==1.5.0
-pep8==1.7.1
-pycodestyle==2.5.0
+certifi==2019.11.28
+chardet==3.0.4
+environs==7.1.0
+idna==2.8
+marshmallow==3.3.0
 python-dotenv==0.10.3
-virtualenv==16.7.7
+requests==2.22.0
+urllib3==1.25.7
