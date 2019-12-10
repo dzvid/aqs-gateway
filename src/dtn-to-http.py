@@ -10,6 +10,20 @@ from environs import Env
 from math import ceil
 from pathlib import Path
 
+# Load enviroment variables
+env = Env()
+env_path = Path('.') / '.env'
+env.read_env(path=env_path, recurse=False)
+
+# API endpoint for sensors data
+API_URL = env.str('API_URL')
+
+# DTN daemon connection details
+DTN_DAEMON_ADDRESS = env.str('DTN_DAEMON_ADDRESS')
+DTN_DAEMON_PORT = env.int('DTN_DAEMON_PORT')
+# Demux token of this application, which will be concatenated with the DTN Endpoint identifier of the node
+# where this script actually runs
+DTN_APP = env.str('DTN_APP')
 
 # Functions to handle the communication with the DTN Daemon
 def daemon_reader_thread(cv):
@@ -96,23 +110,6 @@ def is_json(json_paylod):
     except ValueError as e:
         return False
     return True
-
-
-# Load enviroment variables
-env = Env()
-env_path = Path('.') / '.env'
-env.read_env(path=env_path, recurse=False)
-
-# API endpoint for sensors data
-API_URL = env.str('API_URL')
-
-# DTN daemon connection details
-DTN_DAEMON_ADDRESS = env('DTN_DAEMON_ADDRESS')
-DTN_DAEMON_PORT = env.int('DTN_DAEMON_PORT')
-# Demux token of this application, which will be concatenated with the DTN Endpoint identifier of the node
-# where this script actually runs
-DTN_APP = env('DTN_APP')
-
 
 # Create the socket to communicate with the DTN daemon
 d = socket.socket()
