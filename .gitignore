@@ -1,6 +1,12 @@
 # Developing temporary assets
 temp/
 
+# Ignore Bundles but not the folder
+# Ignore everything in this directory
+# Except this file
+!ibrdtn/
+ibrdtn/bundles/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

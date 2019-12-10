@@ -1,9 +1,10 @@
 import socket
-import paho.mqtt.client
 import base64
 import threading
 import json
 import queue as Queue
+import requests
+from requests.exceptions import ConnectionError, RequestException
 
 from environs import Env
 from math import ceil
@@ -84,34 +85,10 @@ def wait_for_response(cv):
     return ret
 
 
-# MQTT Callback methods
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
-        print("Connected to MQTT broker (RC: %s)" % rc)
-    else:
-        print("Connection to MQTT broker failed (RC: %s)" % rc)
-
-
-def on_log(client, userdata, level, buf):
-    print(buf)
-
-
-def on_publish(client, userdata, mid):
-    print("Data published (Mid: %s)" % mid)
-
-
-def on_disconnect(client, userdata, rc):
-    if rc != 0:
-        print("Unexpected disconnect")
-    print("Disconnected from MQTT broker")
-
-# JSON Validation method
-
-
 def is_json(json_paylod):
     """
     Check if the payload is a valid json.
-    Args: 
+    Args:
         json_paylod: The message payload send from the DTN node.
     """
     try:
@@ -126,32 +103,16 @@ env = Env()
 env_path = Path('.') / '.env'
 env.read_env(path=env_path, recurse=False)
 
-# Broker connection details
-mqttBrokerHost = env('MQTT_BROKER_HOST')
-mqttBrokerPort = env.int('MQTT_BROKER_PORT')
-mqttUser = env('MQTT_USER')
-mqttPassword = env('MQTT_PASS')
+# API endpoint for sensors data
+API_URL = env.str('API_URL')
 
 # DTN daemon connection details
 DTN_DAEMON_ADDRESS = env('DTN_DAEMON_ADDRESS')
 DTN_DAEMON_PORT = env.int('DTN_DAEMON_PORT')
 # Demux token of this application, which will be concatenated with the DTN Endpoint identifier of the node
 # where this script actually runs
-DTN_SOURCE_DEMUX_TOKEN = env('DTN_SOURCE_DEMUX_TOKEN')
+DTN_APP = env('DTN_APP')
 
-
-# Set MQTT client
-mqttClient = paho.mqtt.client.Client()
-mqttClient.username_pw_set(mqttUser, mqttPassword)
-# Register callbacks
-mqttClient.on_connect = on_connect
-mqttClient.on_log = on_log
-mqttClient.on_publish = on_publish
-mqttClient.on_disconnect = on_disconnect
-# Connect to MQTT broker
-mqttClient.connect(mqttBrokerHost, mqttBrokerPort, 60)
-# Start the network loop to process the communication with the broker in a separated thread
-mqttClient.loop_start()
 
 # Create the socket to communicate with the DTN daemon
 d = socket.socket()
@@ -167,7 +128,7 @@ d.send(b"protocol extended\n")
 fd.readline()
 # Set endpoint identifier
 d.send(bytes("set endpoint %s\n" %
-             DTN_SOURCE_DEMUX_TOKEN, encoding="UTF-8"))
+             DTN_APP, encoding="UTF-8"))
 # Read protocol set EID response
 fd.readline()
 
@@ -184,8 +145,8 @@ reader = threading.Thread(name='daemon_reader',
 reader.start()
 
 # Main thread loop:
-# Retrieve and process notifications of incoming bundles, extract MQTT payload from the received bundle
-# and finally publish the message to the broker.
+# Retrieve and process notifications of incoming bundles, extract payload from the received bundle
+# and finally publish the message to the API.
 
 while True:
     notification = notifications.get()
@@ -195,22 +156,29 @@ while True:
 
     d.send(b"payload get\n")
     res = wait_for_response(condition)
-    mqttData = str(base64.b64decode(res[4]), encoding="UTF-8")
-    # the sensor topic and message are divided by one '\n'
-    mqttData = mqttData.split('\n')
-    mqttTopic = mqttData[0]
-    mqttDataJson = mqttData[1]
+    # Get the sensor node payload
+    payload_message = str(base64.b64decode(res[4]), encoding="UTF-8")
 
-    # Publish data
+    # Publishing data to API
     try:
-        if is_json(mqttDataJson):
-            mqttClient.publish(
-                topic=mqttTopic, payload=mqttDataJson, qos=1)
+        # Get paylod fom json string
+        payload = json.loads(payload_message)
+        payload = payload['payload']
+
+        # Publish data to API
+        response = requests.post(url=API_URL, json=payload)
+
+        if (response.status_code == 200):
+            print("Status:{0}\nReading saved successfully!\n".format(
+                response.status_code))
         else:
-            raise ValueError(
-                'Invalid payload provided, payload must be a JSON')
-    except ValueError as valueError:
-        print("Value Error: {}".format(valueError))
+            print("Reading not saved!\nStatus:{0}\nResponse:{1}\n".format(
+                response.status_code, response.json()))
+
+    except ValueError as error:
+        print("'Invalid payload provided, payload must be a JSON': {}".format(error))
+    except (ConnectionError, ConnectionRefusedError, ConnectionAbortedError, RequestException) as error:
+        print("Failed to connect to the server: {}".format(error))
     except Exception as error:
         print("Generic Error: {}".format(error))
 
@@ -218,7 +186,4 @@ while True:
     wait_for_response(condition)
 
     notifications.task_done()
-
-mqttClient.loop_stop()
-mqttClient.disconnect()
 d.close()
