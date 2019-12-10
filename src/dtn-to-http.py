@@ -19,11 +19,11 @@ env.read_env(path=env_path, recurse=False)
 API_URL = env.str('API_URL')
 
 # DTN daemon connection details
-DTN_DAEMON_ADDRESS = env.str('DTN_DAEMON_ADDRESS')
+DTN_DAEMON_ADDRESS = env('DTN_DAEMON_ADDRESS')
 DTN_DAEMON_PORT = env.int('DTN_DAEMON_PORT')
 # Demux token of this application, which will be concatenated with the DTN Endpoint identifier of the node
 # where this script actually runs
-DTN_APP = env.str('DTN_APP')
+DTN_APP = env('DTN_APP')
 
 # Functions to handle the communication with the DTN Daemon
 def daemon_reader_thread(cv):
