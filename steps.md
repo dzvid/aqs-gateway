@@ -71,10 +71,10 @@
   source venv/bin/activate
   ```
 
-4 - Now you can install packages without affecting other projects or your global Python installation. For example lets install the mqtt-paho python lib:
+4 - Now you can install packages without affecting other projects or your global Python installation. For example lets install the requests python module:
 
   ```bash
-  pip3 install paho-mqtt
+  pip3 install requests
   ```
   
   If you want to stop using the virtual environment and go back to your global Python, you can deactivate it:
