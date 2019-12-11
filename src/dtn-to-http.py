@@ -12,8 +12,7 @@ from pathlib import Path
 
 # Load enviroment variables
 env = Env()
-env_path = Path('.') / '.env'
-env.read_env(path=env_path, recurse=False)
+env.read_env()
 
 # API endpoint for sensors data
 API_URL = env.str('API_URL')
