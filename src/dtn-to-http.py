@@ -6,23 +6,31 @@ import queue as Queue
 import requests
 from requests.exceptions import ConnectionError, RequestException
 
-from environs import Env
+# from environs import Env
 from math import ceil
-from pathlib import Path
+# from pathlib import Path
 
-# Load enviroment variables
-env = Env()
-env.read_env()
+# # Load enviroment variables
+# env = Env()
+# env.read_env()
 
-# API endpoint for sensors data
-API_URL = env.str('API_URL')
+# # API endpoint for sensors data
+# API_URL = env.str('API_URL')
 
-# DTN daemon connection details
-DTN_DAEMON_ADDRESS = env('DTN_DAEMON_ADDRESS')
-DTN_DAEMON_PORT = env.int('DTN_DAEMON_PORT')
-# Demux token of this application, which will be concatenated with the DTN Endpoint identifier of the node
-# where this script actually runs
-DTN_APP = env('DTN_APP')
+# # DTN daemon connection details
+# DTN_DAEMON_ADDRESS = env('DTN_DAEMON_ADDRESS')
+# DTN_DAEMON_PORT = env.int('DTN_DAEMON_PORT')
+# # Demux token of this application, which will be concatenated with the DTN Endpoint identifier of the node
+# # where this script actually runs
+# DTN_APP = env('DTN_APP')
+
+# DTN
+DTN_DAEMON_ADDRESS='localhost'
+DTN_DAEMON_PORT=4550
+DTN_APP='gateway'
+
+# API
+API_URL='http://localhost:3000/readings'
 
 # Functions to handle the communication with the DTN Daemon
 def daemon_reader_thread(cv):
