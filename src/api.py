@@ -1,7 +1,7 @@
 import requests
 
 
-class API:
+class Api:
     """
     Class to abstract API endpoints.
     """
@@ -12,7 +12,7 @@ class API:
     def _url(self, path):
         return self._BASE_URL + path
 
-    def storeReading(self, reading):
+    def store_reading(self, reading):
         """
         Sends a sensor node reading to be persisted by API.
 

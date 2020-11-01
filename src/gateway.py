@@ -4,31 +4,10 @@ import threading
 import json
 import queue as Queue
 
-# from environs import Env
 from math import ceil
 
-from api import API
-
-# from pathlib import Path
-
-# # Load enviroment variables
-# env = Env()
-# env.read_env()
-
-# # API endpoint for sensors data
-# API_URL = env.str('API_URL')
-
-# # DTN daemon connection details
-# DTN_DAEMON_ADDRESS = env('DTN_DAEMON_ADDRESS')
-# DTN_DAEMON_PORT = env.int('DTN_DAEMON_PORT')
-# # Demux token of this application, which will be concatenated with the DTN Endpoint identifier of the node
-# # where this script actually runs
-# DTN_APP = env('DTN_APP')
-
-# DTN
-DTN_DAEMON_ADDRESS = "localhost"
-DTN_DAEMON_PORT = 4550
-DTN_APP = "gateway"
+from api import Api
+from ibrdtn import IbrdtnDaemon
 
 # Functions to handle the communication with the DTN Daemon
 def daemon_reader_thread(cv):
@@ -42,7 +21,7 @@ def daemon_reader_thread(cv):
 
     while True:
         remaining_lines = 0
-        res = fd.readline().rstrip()
+        res = dtn_daemon.daemon_stream.readline().rstrip()
         if res.startswith("602 NOTIFY BUNDLE"):
             # Put the notification in a queue. The main thread will be responsible to process notifications.
             notifications.put(res)
@@ -58,7 +37,7 @@ def daemon_reader_thread(cv):
         with cv:
             response = []
             for i in range(0, remaining_lines):
-                response.append(fd.readline().rstrip())
+                response.append(dtn_daemon.daemon_stream.readline().rstrip())
             response.insert(0, res)
 
             if res.startswith("200 PAYLOAD GET"):
@@ -75,7 +54,7 @@ def daemon_reader_thread(cv):
                 payload_lines = int(c) + 1
                 response.append("")
                 for i in range(0, payload_lines):
-                    response[4] += fd.readline().rstrip()
+                    response[4] += dtn_daemon.daemon_stream.readline().rstrip()
 
             # Set the ready flag and wake up the main thread which is waiting for the response to a request
             response_is_ready = True
@@ -104,35 +83,8 @@ def wait_for_response(cv):
     return ret
 
 
-def is_json(json_paylod):
-    """
-    Check if the payload is a valid json.
-    Args:
-        json_paylod: The message payload send from the DTN node.
-    """
-    try:
-        json_object = json.loads(json_paylod)
-    except ValueError as e:
-        return False
-    return True
-
-
-# Create the socket to communicate with the DTN daemon
-daemonSocket = socket.socket()
-# Connect to the DTN daemon
-daemonSocket.connect((DTN_DAEMON_ADDRESS, DTN_DAEMON_PORT))
-# Get a file object associated with the daemon's socket
-fd = daemonSocket.makefile()
-# Read daemon's header response
-fd.readline()
-# Switch to extended protocol mode
-daemonSocket.send(b"protocol extended\n")
-# Read protocol switch response
-fd.readline()
-# Set endpoint identifier
-daemonSocket.send(bytes("set endpoint %s\n" % DTN_APP, encoding="UTF-8"))
-# Read protocol set EID response
-fd.readline()
+dtn_daemon = IbrdtnDaemon()
+dtn_daemon.create_connection()
 
 # Create a worker thread that reads from daemon's socket for responses to requests or notifications of incoming bundles.
 # Global variables 'response' and 'response_is_ready' will be manipulated by the worker thread once protected
@@ -154,22 +106,23 @@ reader.start()
 while True:
     notification = notifications.get()
     query_string = notification.split(" ", 3)[3]
-    daemonSocket.send(
+    dtn_daemon.daemon_socket.send(
         bytes("bundle load %s\n" % query_string, encoding="UTF-8")
     )
     wait_for_response(condition)
 
-    daemonSocket.send(b"payload get\n")
+    dtn_daemon.daemon_socket.send(b"payload get\n")
     res = wait_for_response(condition)
     payload_message = str(base64.b64decode(res[4]), encoding="UTF-8")
 
     try:
-        payload = json.loads(payload_message)
-        API().storeReading(reading=payload)
-    except ValueError as error:
-        print("Payload must be a JSON: {}".format(error))
+        Api().store_reading(reading=json.loads(payload_message))
+    except json.JSONDecodeError as error:
+        print("Payload must be a valid JSON: {}".format(error))
+    except Exception as error:
+        print("Unexpected error: {}".format(error))
 
-    daemonSocket.send(b"bundle free\n")
+    dtn_daemon.daemon_socket.send(b"bundle free\n")
     wait_for_response(condition)
     notifications.task_done()
-daemonSocket.close()
+dtn_daemon.close_connection()
