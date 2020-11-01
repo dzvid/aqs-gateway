@@ -23,20 +23,18 @@ class Api:
         """
 
         try:
-            print(reading)
-            # response = requests.post(
-            #     url=self._url("/readings"), json=reading, timeout=5
-            # )
+            response = requests.post(
+                url=self._url("/readings"), json=reading, timeout=5
+            )
 
-            # if response.status_code == 201:
-            #     print("Reading stored successfully!\n")
-            # else:
-            #     print(
-            #         "Reading not stored!\nStatus:{0}\nResponse: {1}\n".format(
-            #             response.status_code, response.json()
-            #         )
-            #     )
-
+            if response.status_code == 201:
+                print("Reading stored successfully!\n")
+            else:
+                print(
+                    "Reading not stored!\nStatus:{0}\nResponse: {1}\n".format(
+                        response.status_code, response.json()
+                    )
+                )
         except (requests.ConnectionError, requests.Timeout) as error:
             print("Failed to connect to the server: {}".format(error))
         except Exception as error:
