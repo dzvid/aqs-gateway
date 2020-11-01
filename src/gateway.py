@@ -3,11 +3,12 @@ import base64
 import threading
 import json
 import queue as Queue
-import requests
-from requests.exceptions import ConnectionError, RequestException
 
 # from environs import Env
 from math import ceil
+
+from api import API
+
 # from pathlib import Path
 
 # # Load enviroment variables
@@ -25,12 +26,9 @@ from math import ceil
 # DTN_APP = env('DTN_APP')
 
 # DTN
-DTN_DAEMON_ADDRESS='localhost'
-DTN_DAEMON_PORT=4550
-DTN_APP='gateway'
-
-# API
-API_URL='http://localhost:3000/readings'
+DTN_DAEMON_ADDRESS = "localhost"
+DTN_DAEMON_PORT = 4550
+DTN_APP = "gateway"
 
 # Functions to handle the communication with the DTN Daemon
 def daemon_reader_thread(cv):
@@ -75,7 +73,7 @@ def daemon_reader_thread(cv):
                 c = ceil(b / 80)
                 # The plus 1 is due to a blank line after the encoded payload
                 payload_lines = int(c) + 1
-                response.append('')
+                response.append("")
                 for i in range(0, payload_lines):
                     response[4] += fd.readline().rstrip()
 
@@ -118,21 +116,21 @@ def is_json(json_paylod):
         return False
     return True
 
+
 # Create the socket to communicate with the DTN daemon
-d = socket.socket()
+daemonSocket = socket.socket()
 # Connect to the DTN daemon
-d.connect((DTN_DAEMON_ADDRESS, DTN_DAEMON_PORT))
+daemonSocket.connect((DTN_DAEMON_ADDRESS, DTN_DAEMON_PORT))
 # Get a file object associated with the daemon's socket
-fd = d.makefile()
+fd = daemonSocket.makefile()
 # Read daemon's header response
 fd.readline()
 # Switch to extended protocol mode
-d.send(b"protocol extended\n")
+daemonSocket.send(b"protocol extended\n")
 # Read protocol switch response
 fd.readline()
 # Set endpoint identifier
-d.send(bytes("set endpoint %s\n" %
-             DTN_APP, encoding="UTF-8"))
+daemonSocket.send(bytes("set endpoint %s\n" % DTN_APP, encoding="UTF-8"))
 # Read protocol set EID response
 fd.readline()
 
@@ -144,8 +142,9 @@ response = []
 response_is_ready = False
 condition = threading.Condition()
 notifications = Queue.Queue()
-reader = threading.Thread(name='daemon_reader',
-                          target=daemon_reader_thread, args=(condition,))
+reader = threading.Thread(
+    name="daemon_reader", target=daemon_reader_thread, args=(condition,)
+)
 reader.start()
 
 # Main thread loop:
@@ -154,40 +153,23 @@ reader.start()
 
 while True:
     notification = notifications.get()
-    query_string = notification.split(' ', 3)[3]
-    d.send(bytes("bundle load %s\n" % query_string, encoding="UTF-8"))
+    query_string = notification.split(" ", 3)[3]
+    daemonSocket.send(
+        bytes("bundle load %s\n" % query_string, encoding="UTF-8")
+    )
     wait_for_response(condition)
 
-    d.send(b"payload get\n")
+    daemonSocket.send(b"payload get\n")
     res = wait_for_response(condition)
-    # Get the sensor node payload
     payload_message = str(base64.b64decode(res[4]), encoding="UTF-8")
 
-    # Publishing data to API
     try:
-        # Get paylod fom json string
         payload = json.loads(payload_message)
-        payload = payload['payload']
-
-        # Publish data to API
-        response = requests.post(url=API_URL, json=payload)
-
-        if (response.status_code == 200):
-            print("Status:{0}\nReading saved successfully!\n".format(
-                response.status_code))
-        else:
-            print("Reading not saved!\nStatus:{0}\nResponse:{1}\n".format(
-                response.status_code, response.json()))
-
+        API().storeReading(reading=payload)
     except ValueError as error:
-        print("'Invalid payload provided, payload must be a JSON': {}".format(error))
-    except (ConnectionError, ConnectionRefusedError, ConnectionAbortedError, RequestException) as error:
-        print("Failed to connect to the server: {}".format(error))
-    except Exception as error:
-        print("Generic Error: {}".format(error))
+        print("Payload must be a JSON: {}".format(error))
 
-    d.send(b"bundle free\n")
+    daemonSocket.send(b"bundle free\n")
     wait_for_response(condition)
-
     notifications.task_done()
-d.close()
+daemonSocket.close()
