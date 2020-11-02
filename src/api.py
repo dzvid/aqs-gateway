@@ -35,7 +35,10 @@ class Api:
                         response.status_code, response.json()
                     )
                 )
-        except (requests.ConnectionError, requests.Timeout) as error:
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout,
+        ) as error:
             print("Failed to connect to the server: {}".format(error))
         except Exception as error:
             print("Generic Error: {}".format(error))
