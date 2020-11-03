@@ -7,7 +7,7 @@ class Api:
     """
 
     def __init__(self):
-        self._BASE_URL = "http://localhost:3000"
+        self._BASE_URL = "http://192.168.0.14:3000"
 
     def _url(self, path):
         return self._BASE_URL + path
