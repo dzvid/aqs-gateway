@@ -1,13 +1,16 @@
 import socket
 
 from time import sleep
+from environs import Env
 
 
 class IbrdtnDaemon:
     def __init__(self):
-        self._DTN_DAEMON_ADDRESS = "127.0.0.1"
-        self._DTN_DAEMON_PORT = 4550
-        self._DTN_APP = "gateway"
+        env = Env()
+        env.read_env()
+        self._DTN_DAEMON_ADDRESS = env.str("DTN_DAEMON_ADDRESS")
+        self._DTN_DAEMON_PORT = env.int("DTN_DAEMON_PORT")
+        self._DTN_APP = env.str("DTN_APP")
         self.daemon_socket = None
         self.daemon_stream = None
 
