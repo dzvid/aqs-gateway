@@ -1,15 +1,16 @@
-FROM python:3.5.9-alpine
+FROM python:3.6.9-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-COPY ./src/dtn-to-http.py .
+COPY .env .
+COPY ./src .
 
-COPY entrypoint.sh ./
+COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 
-CMD [ "python", "dtn-to-http.py" ]
+CMD [ "python3", "gateway.py" ]
 
 ENTRYPOINT ["./entrypoint.sh"]

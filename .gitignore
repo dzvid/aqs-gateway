@@ -1,4 +1,4 @@
-# Developing temporary assets
+# Development temporary assets
 temp/
 
 # Ignore Bundles but not the folder
@@ -6,6 +6,7 @@ temp/
 # Except this file
 !ibrdtn/
 ibrdtn/bundles/*
+ibrdtn/log/*.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
