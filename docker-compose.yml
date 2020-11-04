@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  aqs-ibrdtn:
+    image: dzvid/ibrdtn:latest
+    container_name: aqs-ibrdtn
+    restart: always
+    network_mode: host
+    volumes:
+      - ./ibrdtn/config/flooding/ibrdtn.conf:/ibrdtn/config/ibrdtn.conf
+      - ./ibrdtn/bundles:/ibrdtn/bundles
+      - ./ibrdtn/log:/ibrdtn/log
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    entrypoint: ["dtnd", "-c", "/ibrdtn/config/ibrdtn.conf", "-d", "60"]
+
+  aqs-gateway:
+    image: dzvid/aqs-gateway:latest
+    container_name: aqs-gateway
+    restart: always
+    network_mode: host
+    environment:
+      - PYTHONUNBUFFERED=0
+      - API_URL=${API_URL}
+      - DTN_DAEMON_ADDRESS=${DTN_DAEMON_ADDRESS}
+      - DTN_DAEMON_PORT=${DTN_DAEMON_PORT}
+      - DTN_APP=${DTN_APP}
+    depends_on:
+      - aqs-ibrdtn
