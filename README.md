@@ -27,7 +27,7 @@
 <br />
 <p align="center">
   <p align="center">
-    Backend module
+    Gateway module
     <br />
     <a href="https://github.com/dzvid/aqs-gateway"><strong>Explore the docs »</strong></a>
     <br />
