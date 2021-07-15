@@ -17,7 +17,7 @@ class IbrdtnDaemon:
     def create_connection(self):
         """
           Attempts to create a connection to IBRDTN daemon, if it fails, takes a
-          5 seconds interval until next try.
+          5 seconds interval until next try (keep trying until it succeeds).
         """
         connected = False
 
@@ -35,7 +35,7 @@ class IbrdtnDaemon:
             Creates a socket and a stream (file object aka file descriptor)
             to communicate with DTN daemon. Sets the daemon in protocol extended
             mode and the endpoint app source.
-            """
+        """
         try:
             # Create the socket to communicate with the DTN daemon
             self.daemon_socket = socket.socket()

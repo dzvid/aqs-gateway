@@ -15,6 +15,10 @@ services:
     entrypoint: ["dtnd", "-c", "/ibrdtn/config/ibrdtn.conf", "-d", "99"]
 
   aqs-gateway:
+    build: .
+    working_dir: /app
+    volumes:
+      - ./:/app
     image: dzvid/aqs-gateway:latest
     container_name: aqs-gateway
     restart: always

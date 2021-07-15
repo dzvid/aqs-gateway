@@ -16,19 +16,24 @@ class Api:
     def _url(self, path):
         return self._API_URL + path
 
-    def store_reading(self, reading):
+    def store_reading(self, sensor_node_id, reading):
         """
         Sends a sensor node reading to be persisted by API.
 
         Parameters
         ----------
+        sensor_node_id : string
+          A sensor node's uuid.
         reading : JSON
-          A sensor node reading.
+          A sensor node's reading.
         """
 
         try:
+            reading_endpoint = "/sensor-nodes/{0}/readings".format(
+                sensor_node_id
+            )
             response = requests.post(
-                url=self._url("/readings"), json=reading, timeout=5
+                url=self._url(reading_endpoint), json=reading, timeout=5
             )
 
             if response.status_code == 201:
@@ -43,6 +48,6 @@ class Api:
             requests.exceptions.ConnectionError,
             requests.exceptions.Timeout,
         ) as error:
-            print("Failed to connect to the server: {}".format(error))
+            print("Failed to connect to the server: {0}".format(error))
         except Exception as error:
-            print("Generic Error: {}".format(error))
+            print("Generic Error: {0}".format(error))

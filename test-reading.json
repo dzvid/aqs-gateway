@@ -1,0 +1,13 @@
+{
+  "sensor_node": {
+    "id": "4d857fab-648f-4c61-a035-365fe2d0bbe4"
+  },
+  "reading": {
+    "relative_humidity": 20,
+    "temperature": 36,
+    "pressure": 1013.25,
+    "pm25": 10,
+    "pm10": 50,
+    "collected_at": "2021-07-07T03:29:25.663Z"
+  }
+}

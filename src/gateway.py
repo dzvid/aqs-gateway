@@ -116,9 +116,14 @@ while True:
     payload_message = str(base64.b64decode(res[4]), encoding="UTF-8")
 
     try:
-        Api().store_reading(reading=json.loads(payload_message))
+        payload = json.loads(payload_message)
+        sensor_node_id = payload["sensor_node"]["id"]
+        reading = payload["reading"]
+        Api().store_reading(sensor_node_id=sensor_node_id, reading=reading)
     except json.JSONDecodeError as error:
         print("Payload must be a valid JSON: {}".format(error))
+    except KeyError as error:
+        print("Missing keys in JSON: {}".format(error))
     except Exception as error:
         print("Unexpected error: {}".format(error))
 
