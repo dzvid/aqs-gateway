@@ -12,7 +12,8 @@ services:
       - ./ibrdtn/log:/ibrdtn/log
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    entrypoint: ["dtnd", "-c", "/ibrdtn/config/ibrdtn.conf", "-d", "99"]
+    entrypoint:
+      ["dtnd", "-i", "wlan0", "-c", "/ibrdtn/config/ibrdtn.conf", "-d", "99"]
 
   aqs-gateway:
     image: dzvid/aqs-gateway:latest
